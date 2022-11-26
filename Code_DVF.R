@@ -19,11 +19,22 @@ DVF_2017 %>% drop_na(valeur_fonciere)
 #hist(DVF_2017[DVF_2017$valeur_fonciere<quantile(DVF_2017$valeur_fonciere,0.03,na.rm=TRUE)]$valeur_fonciere)
 
 #Ventes "raisonnables" sont comprises entre 20 000 et 5 millions d'euros
+raisonnables <- DVF_2017[DVF_2017$valeur_fonciere<5000000 & DVF_2017$valeur_fonciere>20000,]
 a <- nrow(DVF_2017[DVF_2017$valeur_fonciere<5000000 & DVF_2017$valeur_fonciere>20000,])
 b <- nrow(DVF_2017)
 ratio_ventes_raisonnables <- a/b
 #82.7% des transactions (maisons,appartments, dépendance, local ou non précisé) ont coûté entre 20 000 € et 5 000 000 €
 
+Maisons_Raisonnables <- raisonnables[type_local=='Maison']
+A_Raisonnables <- raisonnables[type_local=='Maison']
 
+h <- "occurences"
+nb_vente_type <- function(df){
+  for (i in unique(df$type_local)){
+    print(paste(i,sum(df$type_local==i),h))
+  } 
+}
+nb_vente_type(raisonnables)
 #hist(DVF_2017$valeur_fonciere,breaks=1000) illisibile
+#hist(DVF_2017[DVF_2017$type_local=='Dépendance' & valeur_fonciere<500000]$valeur_fonciere)
 
