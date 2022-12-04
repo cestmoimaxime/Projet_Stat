@@ -4,6 +4,9 @@ library("R.utils")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
+library("arrangements")
+library("gtools")
+library("combinat")
 # DVF_2022=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2022.csv")
 # DVF_2021=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2021.csv")
 # DVF_2020=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2020.csv")
@@ -153,6 +156,9 @@ union=rbind(pr_morceau_revendues_2018_2019_2020_2021_2022,
 
 cinq_transactions=union[!union$id_parcelle %in% revendues_2017_2018_2019_2020_2021_2022$id_parcelle]
 
+cinq_transactions_Maisons_Vente <- cinq_transactions[cinq_transactions$nature_mutation=='Vente' & cinq_transactions$type_local=='Maison',]
+cinq_transactions_Appartement_Vente <- cinq_transactions[cinq_transactions$nature_mutation=='Vente' & cinq_transactions$type_local=='Appartement',]
+
 
 #Tentatives plus simple
 #On unionne toutes les années en même temps
@@ -161,29 +167,60 @@ cinq_transactions=union[!union$id_parcelle %in% revendues_2017_2018_2019_2020_20
 
 toutes_annees<- rbind(DVF_2017,DVF_2018,DVF_2019,DVF_2020,DVF_2021,DVF_2022)
 
-quatre_transactions <- data.frame()
-names(quatre_transactions) <- names(DVF_2017)
+
 columns = names(DVF_2017) 
 quatre_transactions = data.frame(matrix(nrow = 0, ncol = length(columns))) 
 colnames(quatre_transactions) = columns
 liste_parcelles <- unique(toutes_annees$id_parcelle)
 l <- length(liste_parcelles)
 i <- 0
-for (k in liste_parcelles){
+liste_parcelle_plus_que_un <- tru_liste$Var1
+for (k in liste_parcelle_plus_que_un){
   i <- i+1
   print(paste0(i," sur ,",l))
-  sous_df_avec_id_k <- toutes_annees[toutes_annees$id_parcelle==k]
+  sous_df_avec_id_k <- toutes_annees[toutes_annees$id_parcelle==k,]
   annee=substring(sous_df_avec_id_k$id_mutation,1,4)[1]
-  if (length(unique(substring(sous_df_avec_id_k$id_mutation,1,4)))==2){
+  if (length(unique(substring(sous_df_avec_id_k$id_mutation,1,4)))==6){
     quatre_transactions <- rbind(quatre_transactions,sous_df_avec_id_k[sous_df_avec_id_k$id_mutation %in% annee,])
   }
   
 }
 
+liste_potentielle <- c()
+for (k in liste_parcelle_plus_que_un){
+  i <- i+1
+  print(paste0(i," sur ,",l))
+  sous_df_avec_id_k <- toutes_annees[toutes_annees$id_parcelle==k,]
+  if(length(unique(substring(sous_df_avec_id_k$id_mutation,1,4)))==6){
+    liste_potentielle <- c(liste_potentielle,k)
+  }
+  }
+  
+liste_annees <- c("2017","2018","2019","2020","2021","2022")
+permutations(n = 6, r = 6, v = liste_annees)
+
+permu <- combn(liste_annees, 5)
+
+liste_
+
+nombre_transactions <- function(x){
+  permu <- as.data.frame(combn(liste_annees, x))
+  for (k in 1:length(permu)){
+    permu_actuelle <- permu[,k]
+    for (i in permu_actuelle){
+      
+    }
+    
+
+
+  }
+}
 
 #Visualisation
 Maisons_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Appartement_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+Maisons_5_ventes <- ggplot(cinq_transactions_Maisons_Vente)+geom_point(aes (x=cinq_transactions_Maisons_Vente$longitude,y=cinq_transactions_Maisons_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+Appartement_5_ventes <- ggplot(cinq_transactions_Appartement_Vente)+geom_point(aes (x=cinq_transactions_Appartement_Vente$longitude,y=cinq_transactions_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 
 
 
