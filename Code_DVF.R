@@ -7,10 +7,10 @@ library("ggplot2")
 library("arrangements")
 library("gtools")
 library("combinat")
-# DVF_2022=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2022.csv")
-# DVF_2021=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2021.csv")
-# DVF_2020=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2020.csv")
-# DVF_2019=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2019.csv")
+ DVF_2022=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2022.csv")
+ DVF_2021=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2021.csv")
+ DVF_2020=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2020.csv")
+ DVF_2019=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2019.csv")
 DVF_2018=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2018.csv")
 DVF_2017=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2017.csv")
 
@@ -70,6 +70,7 @@ revendues_2017_2018_2019_2020_2021_2022 <- DVF_2022[DVF_2022$id_parcelle %in% li
 revendues_2017_2018_2019_2020_2021_2022_Maison_Vente <-revendues_2017_2018_2019_2020_2021_2022[revendues_2017_2018_2019_2020_2021_2022$nature_mutation=='Vente' & revendues_2017_2018_2019_2020_2021_2022$type_local=='Maison',] 
 revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente <-revendues_2017_2018_2019_2020_2021_2022[revendues_2017_2018_2019_2020_2021_2022$nature_mutation=='Vente' & revendues_2017_2018_2019_2020_2021_2022$type_local=='Appartement',]
 
+save(revendues_2017_2018_2019_2020_2021_2022,file="biens_vendus_six_fois.RData")
 
 #Vérification que ces transactions apparaissent dans chaque année
 
