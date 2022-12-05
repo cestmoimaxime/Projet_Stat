@@ -7,6 +7,7 @@ library("ggplot2")
 library("arrangements")
 library("gtools")
 library("combinat")
+library("rgdal")
  DVF_2022=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2022.csv")
  DVF_2021=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2021.csv")
  DVF_2020=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2020.csv")
@@ -84,146 +85,67 @@ dans_2022 <- revendues_2017_2018_2019_2020_2021_2022[!(revendues_2017_2018_2019_
 #les transactions dans l'union sont donc toutes dans chacune des 6 années
 
 
-#5 et seulement 5 fois la transaction en 6 ans
-#5 parmi 6, 6 combinaisons possibles
-# 2017 2018 2019 2020 2021
-# 2017 2018 2019 2020 2022
-# 2017 2018 2019 2021 2022
-# 2017 2018 2020 2021 2022
-# 2017 2019 2020 2021 2022
-# 2018 2019 2020 2021 2022
-liste_parcelle_2017=unique(DVF_2017$id_parcelle)
-revendues_2017_2018 <- DVF_2018[DVF_2018$id_parcelle %in% liste_parcelle_2017,]
-liste_parcelle_2017_2018=unique(revendues_2017_2018$id_parcelle)
-revendues_2017_2018_2019 <- DVF_2019[DVF_2019$id_parcelle %in% liste_parcelle_2017_2018,]
-liste_parcelle_2017_2018_2019=unique(revendues_2017_2018_2019$id_parcelle)
-revendues_2017_2018_2019_2020 <- DVF_2020[DVF_2020$id_parcelle %in% liste_parcelle_2017_2018_2019,]
-liste_parcelle_2017_2018_2019_2020=unique(revendues_2017_2018_2019_2020$id_parcelle)
-pr_morceau_revendues_2017_2018_2019_2020_2021 <- DVF_2021[DVF_2021$id_parcelle %in% liste_parcelle_2017_2018_2019_2020,]
+#Tentatives plus simple par fonction
 
-liste_parcelle_2017=unique(DVF_2017$id_parcelle)
-revendues_2017_2018 <- DVF_2018[DVF_2018$id_parcelle %in% liste_parcelle_2017,]
-liste_parcelle_2017_2018=unique(revendues_2017_2018$id_parcelle)
-revendues_2017_2018_2019 <- DVF_2019[DVF_2019$id_parcelle %in% liste_parcelle_2017_2018,]
-liste_parcelle_2017_2018_2019=unique(revendues_2017_2018_2019$id_parcelle)
-revendues_2017_2018_2019_2020 <- DVF_2020[DVF_2020$id_parcelle %in% liste_parcelle_2017_2018_2019,]
-liste_parcelle_2017_2018_2019_2020=unique(revendues_2017_2018_2019_2020$id_parcelle)
-pr_morceau_revendues_2017_2018_2019_2020_2022 <- DVF_2022[DVF_2022$id_parcelle %in% liste_parcelle_2017_2018_2019_2020,]
+assign("2017", DVF_2017)
+assign("2018", DVF_2018)
+assign("2019", DVF_2019)
+assign("2020", DVF_2020)
+assign("2021", DVF_2021)
+assign("2022", DVF_2022)
 
-liste_parcelle_2017=unique(DVF_2017$id_parcelle)
-revendues_2017_2018 <- DVF_2018[DVF_2018$id_parcelle %in% liste_parcelle_2017,]
-liste_parcelle_2017_2018=unique(revendues_2017_2018$id_parcelle)
-revendues_2017_2018_2019 <- DVF_2019[DVF_2019$id_parcelle %in% liste_parcelle_2017_2018,]
-liste_parcelle_2017_2018_2019=unique(revendues_2017_2018_2019$id_parcelle)
-revendues_2017_2018_2019_2021 <- DVF_2021[DVF_2021$id_parcelle %in% liste_parcelle_2017_2018_2019,]
-liste_parcelle_2017_2018_2019_2021=unique(revendues_2017_2018_2019_2021$id_parcelle)
-pr_morceau_revendues_2017_2018_2019_2021_2022 <- DVF_2022[DVF_2022$id_parcelle %in% liste_parcelle_2017_2018_2019_2021,]
-
-liste_parcelle_2017=unique(DVF_2017$id_parcelle)
-revendues_2017_2018 <- DVF_2018[DVF_2018$id_parcelle %in% liste_parcelle_2017,]
-liste_parcelle_2017_2018=unique(revendues_2017_2018$id_parcelle)
-revendues_2017_2018_2020 <- DVF_2020[DVF_2020$id_parcelle %in% liste_parcelle_2017_2018,]
-liste_parcelle_2017_2018_2020=unique(revendues_2017_2018_2020$id_parcelle)
-revendues_2017_2018_2020_2021 <- DVF_2021[DVF_2021$id_parcelle %in% liste_parcelle_2017_2018_2020,]
-liste_parcelle_2017_2018_2020_2021=unique(revendues_2017_2018_2020_2021$id_parcelle)
-pr_morceau_revendues_2017_2018_2020_2021_2022 <- DVF_2022[DVF_2022$id_parcelle %in% liste_parcelle_2017_2018_2020_2021,]
-
-liste_parcelle_2017=unique(DVF_2017$id_parcelle)
-revendues_2017_2019 <- DVF_2019[DVF_2019$id_parcelle %in% liste_parcelle_2017,]
-liste_parcelle_2017_2019=unique(revendues_2017_2019$id_parcelle)
-revendues_2017_2019_2020 <- DVF_2020[DVF_2020$id_parcelle %in% liste_parcelle_2017_2019,]
-liste_parcelle_2017_2019_2020=unique(revendues_2017_2019_2020$id_parcelle)
-revendues_2017_2019_2020_2021 <- DVF_2021[DVF_2021$id_parcelle %in% liste_parcelle_2017_2019_2020,]
-liste_parcelle_2017_2019_2020_2021=unique(revendues_2017_2019_2020_2021$id_parcelle)
-pr_morceau_revendues_2017_2019_2020_2021_2022 <- DVF_2022[DVF_2022$id_parcelle %in% liste_parcelle_2017_2019_2020_2021,]
-
-
-
-liste_parcelle_2018=unique(DVF_2018$id_parcelle)
-revendues_2018_2019 <- DVF_2019[DVF_2019$id_parcelle %in% liste_parcelle_2018,]
-liste_parcelle_2018_2019=unique(revendues_2018_2019$id_parcelle)
-revendues_2018_2019_2020 <- DVF_2020[DVF_2020$id_parcelle %in% liste_parcelle_2018_2019,]
-liste_parcelle_2018_2019_2020=unique(revendues_2018_2019_2020$id_parcelle)
-revendues_2018_2019_2020_2021 <- DVF_2021[DVF_2021$id_parcelle %in% liste_parcelle_2018_2019_2020,]
-liste_parcelle_2018_2019_2020_2021=unique(revendues_2018_2019_2020_2021$id_parcelle)
-pr_morceau_revendues_2018_2019_2020_2021_2022 <- DVF_2022[DVF_2022$id_parcelle %in% liste_parcelle_2018_2019_2020_2021,]
-
-union=rbind(pr_morceau_revendues_2018_2019_2020_2021_2022,
-            pr_morceau_revendues_2017_2019_2020_2021_2022,
-            pr_morceau_revendues_2017_2018_2019_2020_2021,
-            pr_morceau_revendues_2017_2018_2019_2021_2022,
-            pr_morceau_revendues_2017_2018_2020_2021_2022,
-            pr_morceau_revendues_2017_2018_2019_2020_2022)
-
-cinq_transactions=union[!union$id_parcelle %in% revendues_2017_2018_2019_2020_2021_2022$id_parcelle]
-
-cinq_transactions_Maisons_Vente <- cinq_transactions[cinq_transactions$nature_mutation=='Vente' & cinq_transactions$type_local=='Maison',]
-cinq_transactions_Appartement_Vente <- cinq_transactions[cinq_transactions$nature_mutation=='Vente' & cinq_transactions$type_local=='Appartement',]
-
-
-#Tentatives plus simple
-#On unionne toutes les années en même temps
-#liste de toutes les id_parcell
-#on prend les id ou le nombre est exactement 4 
-
-toutes_annees<- rbind(DVF_2017,DVF_2018,DVF_2019,DVF_2020,DVF_2021,DVF_2022)
-
-
-columns = names(DVF_2017) 
-quatre_transactions = data.frame(matrix(nrow = 0, ncol = length(columns))) 
-colnames(quatre_transactions) = columns
-liste_parcelles <- unique(toutes_annees$id_parcelle)
-l <- length(liste_parcelles)
-i <- 0
-liste_parcelle_plus_que_un <- tru_liste$Var1
-for (k in liste_parcelle_plus_que_un){
-  i <- i+1
-  print(paste0(i," sur ,",l))
-  sous_df_avec_id_k <- toutes_annees[toutes_annees$id_parcelle==k,]
-  annee=substring(sous_df_avec_id_k$id_mutation,1,4)[1]
-  if (length(unique(substring(sous_df_avec_id_k$id_mutation,1,4)))==6){
-    quatre_transactions <- rbind(quatre_transactions,sous_df_avec_id_k[sous_df_avec_id_k$id_mutation %in% annee,])
-  }
-  
-}
-
-liste_potentielle <- c()
-for (k in liste_parcelle_plus_que_un){
-  i <- i+1
-  print(paste0(i," sur ,",l))
-  sous_df_avec_id_k <- toutes_annees[toutes_annees$id_parcelle==k,]
-  if(length(unique(substring(sous_df_avec_id_k$id_mutation,1,4)))==6){
-    liste_potentielle <- c(liste_potentielle,k)
-  }
-  }
-  
 liste_annees <- c("2017","2018","2019","2020","2021","2022")
-permutations(n = 6, r = 6, v = liste_annees)
-
-permu <- combn(liste_annees, 5)
-
-liste_
-
 nombre_transactions <- function(x){
+  columns = names(DVF_2017)
+  biens_immo = data.frame(matrix(nrow = 0, ncol = length(columns)))
+  colnames(biens_immo) = columns
   permu <- as.data.frame(combn(liste_annees, x))
   for (k in 1:length(permu)){
     permu_actuelle <- permu[,k]
     for (i in permu_actuelle){
-      
+      annee_current=get(i)
+      print(i)
+      if (i==permu_actuelle[1]){
+        liste_parcelle <- unique(get(i)$id_parcelle)
+      }
+      else{
+        revendue <- annee_current[annee_current$id_parcelle %in% liste_parcelle,]
+        liste_parcelle <- unique(revendue$id_parcelle)
+      }
     }
-    
-
-
+    biens_immo <- rbind(biens_immo,revendue)
+    print('un de plus')
   }
+  finit_transaction=biens_immo[!biens_immo$id_parcelle %in% test_six_biens$id_parcelle,]
+  return(finit_transaction)
 }
 
+save(test_cinq_biens,file="biens_vendus_cinq_fois.RData")
+save(revendues_2017_2018_2019_2020_2021_2022,file="biens_vendus_six_fois.RData")
+
+
 #Visualisation
-Maisons_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+
+departement <- readOGR(dsn="C:/Users/Maxime/Documents/Fichier SIG/France/Departement_fr",layer="departements-20180101")
+
+xcdxMaisons_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Appartement_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Maisons_5_ventes <- ggplot(cinq_transactions_Maisons_Vente)+geom_point(aes (x=cinq_transactions_Maisons_Vente$longitude,y=cinq_transactions_Maisons_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Appartement_5_ventes <- ggplot(cinq_transactions_Appartement_Vente)+geom_point(aes (x=cinq_transactions_Appartement_Vente$longitude,y=cinq_transactions_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 
 
+library("sf")
 
+departements <- read_sf("C:/Users/Maxime/Documents/Fichier SIG/France/Departement_fr/departements-20180101.shp")
+departements <- departements[!departements$nom %in% c("Mayotte", "La Réunion", "Guadeloupe", "Martinique", "Guyane"),]
+u <- ggplot(departements) + geom_sf(aes(fill = surf_km2))
 
+save(departements,file="departements.RData")
+
+dans_2017 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2017$id_parcelle),]
+dans_2018 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2018$id_parcelle),]
+dans_2019 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2019$id_parcelle),]
+dans_2020 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2020$id_parcelle),]
+dans_2021 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2021$id_parcelle),]
+dans_2022 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2022$id_parcelle),]
 
