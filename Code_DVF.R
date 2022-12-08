@@ -8,6 +8,7 @@ library("arrangements")
 library("gtools")
 library("combinat")
 library("rgdal")
+library("randomForest")
  DVF_2022=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2022.csv")
  DVF_2021=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2021.csv")
  DVF_2020=read.csv("C://Users/Maxime/Documents/ING3/Projet_DVF/DVF_2020.csv")
@@ -22,6 +23,14 @@ DVF_2019= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2019/full.csv.gz"
 DVF_2020= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2020/full.csv.gz")
 DVF_2021= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2021/full.csv.gz")
 DVF_2022= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2022/full.csv.gz")
+
+#Récupération des shape importants
+departement <- readOGR(dsn="C:/Users/Maxime/Documents/Fichier SIG/France/Departement_fr",layer="departements-20180101")
+poi <- readOGR(dsn="C:/Users/Maxime/Documents/R",layer="vrai_hebergements-classes")
+save(poi,file="poi.RData")
+
+poi_vrai_non_hotel=poi[poi@data$typologie_e %like% "HÔTEL",]
+df <- poi_non_hotel@data
 #On retire les valeurs NA de valeurs foncieres, aucune en réalité (même avec cette fonction l'histo veut pas être fait si je précise pas na.rm=TRUE)
 DVF_2017 %>% drop_na(valeur_fonciere)
 
@@ -106,39 +115,55 @@ nombre_transactions <- function(x){
       annee_current=get(i)
       print(i)
       if (i==permu_actuelle[1]){
-        liste_parcelle <- unique(get(i)$id_parcelle)
+        liste_parcelle <- unique(annee_current$id_parcelle)
+        #adresse_complete=unique(paste0(annee_current$adresse_numero,annee_current$adresse_nom_voie,annee_current$code_commune))
+        
       }
       else{
+        #revendue <- annee_current[paste0(annee_current$adresse_numero,annee_current$adresse_nom_voie,annee_current$code_commune) %in% adresse_complete,]
+        #adresse_complete <- unique(paste0(revendue$adresse_numero,revendue$adresse_nom_voie,revendue$code_commune))
         revendue <- annee_current[annee_current$id_parcelle %in% liste_parcelle,]
         liste_parcelle <- unique(revendue$id_parcelle)
-      }
+        
+        
+        }
     }
     biens_immo <- rbind(biens_immo,revendue)
     print('un de plus')
   }
-  finit_transaction=biens_immo[!biens_immo$id_parcelle %in% test_six_biens$id_parcelle,]
-  return(finit_transaction)
+  #finit_transaction=biens_immo[!biens_immo$id_parcelle %in% test_six_biens$id_parcelle,]
+  return(biens_immo)
 }
+test_encore_vente_maison=test_encore[test_encore$nature_mutation=='Vente' & test_encore$type_local=='Maison',]
+
+adresse_complete=unique(paste0(annee_current$adresse_numero,annee_current$adresse_nom_voie,annee_current$code_commune))
+
 
 save(test_cinq_biens,file="biens_vendus_cinq_fois.RData")
 save(revendues_2017_2018_2019_2020_2021_2022,file="biens_vendus_six_fois.RData")
 
 
+
+liste_biens_department <- as.data.frame(table(revendues_2017_2018_2019_2020_2021_2022$code_departement))
+
+departements_biens <- merge(departement,liste_biens_department,by.x="code_insee",by.y="Var1")
 #Visualisation
 
-departement <- readOGR(dsn="C:/Users/Maxime/Documents/Fichier SIG/France/Departement_fr",layer="departements-20180101")
 
-xcdxMaisons_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+Maisons_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Appartement_6_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$longitude,y=revendues_2017_2018_2019_2020_2021_2022_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Maisons_5_ventes <- ggplot(cinq_transactions_Maisons_Vente)+geom_point(aes (x=cinq_transactions_Maisons_Vente$longitude,y=cinq_transactions_Maisons_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 Appartement_5_ventes <- ggplot(cinq_transactions_Appartement_Vente)+geom_point(aes (x=cinq_transactions_Appartement_Vente$longitude,y=cinq_transactions_Appartement_Vente$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
 
 
+revendues_2017_2018_2019_2020_2021_2022 <- revendues_2017_2018_2019_2020_2021_2022[revendues_2017_2018_2019_2020_2021_2022$nature_mutation=='Vente' & revendues_2017_2018_2019_2020_2021_2022$type_local=='Maison',]
+Maisons_5_ventes <- ggplot(revendues_2017_2018_2019_2020_2021_2022)+geom_point(aes (x=revendues_2017_2018_2019_2020_2021_2022$longitude,y=revendues_2017_2018_2019_2020_2021_2022$latitude))+coord_map(projection="lambert",lat0=42,lat1=52,xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+
 library("sf")
 
 departements <- read_sf("C:/Users/Maxime/Documents/Fichier SIG/France/Departement_fr/departements-20180101.shp")
-departements <- departements[!departements$nom %in% c("Mayotte", "La Réunion", "Guadeloupe", "Martinique", "Guyane"),]
-u <- ggplot(departements) + geom_sf(aes(fill = surf_km2))
+departements_biens <- departements_biens[!departements_biens$nom %in% c("Mayotte", "La Réunion", "Guadeloupe", "Martinique", "Guyane"),]
+u <- ggplot(departements) + geom_sf(aes(fill = "surf_km2"))
 
 save(departements,file="departements.RData")
 
@@ -148,4 +173,143 @@ dans_2019 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2019$id_parcelle
 dans_2020 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2020$id_parcelle),]
 dans_2021 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2021$id_parcelle),]
 dans_2022 <- test_5_ventes[!(test_5_ventes$id_parcelle %in% DVF_2022$id_parcelle),]
+
+shapefile_df <- fortify(departements_biens)
+
+# Now the shapefile can be plotted as either a geom_path or a geom_polygon.
+# Paths handle clipping better. Polygons can be filled.
+# You need the aesthetics long, lat, and group.
+map <- ggplot() +
+  geom_path(data = shapefile_df, 
+            aes(x = long, y = lat, group = group),
+            color = 'gray', fill = 'Freq', size = .2)
+
+print(map) 
+
+maison_vente <- ggplot(test_encore_vente_maison)+geom_point(aes (x=longitude,y=latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+
+
+#Tentative de récupérer les maisons vendues sans les campings
+
+liste_toutes_parcelles=unique(revendues_2017_2018_2019_2020_2021_2022_Maison_Vente$id_parcelle)
+
+DVF_2017_6_fois=DVF_2017[DVF_2017$id_parcelle %in% liste_toutes_parcelles ,]
+DVF_2018_6_fois=DVF_2018[DVF_2018$id_parcelle %in% liste_toutes_parcelles ,]
+DVF_2019_6_fois=DVF_2019[DVF_2019$id_parcelle %in% liste_toutes_parcelles ,]
+DVF_2020_6_fois=DVF_2020[DVF_2020$id_parcelle %in% liste_toutes_parcelles ,]
+DVF_2021_6_fois=DVF_2021[DVF_2021$id_parcelle %in% liste_toutes_parcelles ,]
+DVF_2022_6_fois=DVF_2022[DVF_2022$id_parcelle %in% liste_toutes_parcelles,]
+
+
+toutes_ventes_6_biens=rbind(DVF_2017_6_fois,
+                            DVF_2018_6_fois,
+                            DVF_2019_6_fois,
+                            DVF_2020_6_fois,
+                            DVF_2021_6_fois,
+                            DVF_2022_6_fois)
+
+
+
+
+
+
+
+
+
+
+DVF_2017_Maison_Vendues_6_fois$id_parcelle=='593503550B4716'
+
+
+
+liste_parcelle_6_fois=table_nombre_variable[table_nombre_variable$Freq==6,]$Var1
+
+biens_vendus_uniquement_6_fois <- revendues_2017_2018_2019_2020_2021_2022[revendues_2017_2018_2019_2020_2021_2022$id_parcelle %in% liste_toutes_parcelles,]
+
+Maisons_6_ventes <- ggplot(biens_vendus_uniquement_6_fois)+geom_point(aes (x=longitude,y=latitude))+coord_cartesian(xlim = c(-4.5,9.5), ylim = c(41.5, 51))
+
+#Test d'apprentissage
+# Champs utiles pour l'apprentissage:
+# date_mutation,
+# numero_disposition
+# valeur_foncière,
+# code_postal
+# code_commune
+# code_departement
+# id_parcelle
+# numero_volume
+# lot_1_numero
+# lot_1_surf
+# lot_2_numero
+# lot_2_surf
+# lot_3_numero
+# lot_3_surf
+# lot_4_numero
+# lot_4_surf
+# lot_5_numero
+# lot_5_surf
+# nombre_lot
+# type_local
+# surface_reel_bati
+# nombre_piece_principale
+# natrure_culture
+# nature_culture_special
+# surface terrain
+
+donnees_test1 <- donnees_test[,c("date_mutation",
+                 "numero_disposition",
+                 "valeur_fonciere",
+                 "code_postal",
+                 "code_commune",
+                 "code_departement",
+                 "id_parcelle",
+                 "lot1_numero",
+                 "lot1_surface_carrez",
+                 "lot2_numero",
+                 "lot2_surface_carrez",
+                 "lot3_numero",
+                 "lot3_surface_carrez",
+                 "lot4_numero",
+                 "lot4_surface_carrez",
+                 "lot5_numero",
+                 "lot5_surface_carrez",
+                 "nombre_lots",
+                 "type_local",
+                 "surface_reelle_bati",
+                 "nombre_pieces_principales",
+                 "nature_culture",
+                 "nature_culture_speciale",
+                 "surface_terrain")]
+
+col_names <- names(donnees_test1)
+donnees_test1[,col_names] <- lapply(donnees_test1[,col_names] , factor)
+
+
+save(donnees_test,file='training_sample.RData')
+save(donnees_apprentissage,file="verif_sample.RData")
+donnees_apprentissage=DVF_2017[DVF_2017$type_local=='',]
+donnees_test=DVF_2017[DVF_2017$type_local!='',]
+
+model=randomForest(type_local~.,data=donnees_test1, na.action = na.roughfix)
+
+
+
+
+class(donnees_test$var) = "Numeric"
+
+
+example <- as.data.frame(c("A", "A", "B", "F", "C", "G", "C", "D", "E", "F"))
+names(example) <- "strcol"
+
+for(level in unique(example$strcol)){
+  example[paste("dummy", level, sep = "_")] <- ifelse(example$strcol == level,     1, 0)
+}
+
+library(caret) 
+library (e1071)
+
+
+
+logit.fit <- train(type_local ~ ., data = donnees_test1,method="glm")
+
+
 
