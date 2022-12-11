@@ -311,5 +311,23 @@ library (e1071)
 
 logit.fit <- train(type_local ~ ., data = donnees_test1,method="glm")
 
-
+#Tri des données : suppression des doublons (en faisant la somme des surfaces de terrain) et garde que les maisons
+DVF_2017 <- DVF_2017[DVF_2017$type_local=="Maison"]
+DVF_2017 <- DVF_2017 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
+DVF_2018 <- DVF_2018[DVF_2018$type_local=="Maison"]
+DVF_2018 <- DVF_2018 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
+DVF_2019 <- DVF_2019[DVF_2019$type_local=="Maison"]
+DVF_2019 <- DVF_2019 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
+DVF_2020 <- DVF_2020[DVF_2020$type_local=="Maison"]
+DVF_2020 <- DVF_2020 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
+DVF_2021 <- DVF_2021[DVF_2021$type_local=="Maison"]
+DVF_2021 <- DVF_2021 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
+DVF_2022 <- DVF_2022[DVF_2022$type_local=="Maison"]
+DVF_2022 <- DVF_2022 %>% group_by(id_mutation) %>% 
+  summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
 
