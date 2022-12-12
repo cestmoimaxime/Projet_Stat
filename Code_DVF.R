@@ -255,30 +255,21 @@ Maisons_6_ventes <- ggplot(biens_vendus_uniquement_6_fois)+geom_point(aes (x=lon
 # nature_culture_special
 # surface terrain
 
-donnees_test1 <- donnees_test[,c("date_mutation",
-                 "numero_disposition",
-                 "valeur_fonciere",
-                 "code_postal",
-                 "code_commune",
-                 "code_departement",
-                 "id_parcelle",
-                 "lot1_numero",
+donnees_test_arrangees <- donnees_test[,c("valeur_fonciere",
                  "lot1_surface_carrez",
-                 "lot2_numero",
                  "lot2_surface_carrez",
-                 "lot3_numero",
                  "lot3_surface_carrez",
-                 "lot4_numero",
                  "lot4_surface_carrez",
-                 "lot5_numero",
                  "lot5_surface_carrez",
-                 "nombre_lots",
                  "type_local",
                  "surface_reelle_bati",
                  "nombre_pieces_principales",
                  "nature_culture",
                  "nature_culture_speciale",
-                 "surface_terrain")]
+                 "surface_terrain",
+                 "longitude",
+                 "latitude",
+                 "n")]
 
 col_names <- names(donnees_test1)
 donnees_test1[,col_names] <- lapply(donnees_test1[,col_names] , factor)
@@ -286,29 +277,65 @@ donnees_test1[,col_names] <- lapply(donnees_test1[,col_names] , factor)
 
 save(donnees_test,file='training_sample.RData')
 save(donnees_apprentissage,file="verif_sample.RData")
-donnees_apprentissage=DVF_2017[DVF_2017$type_local=='',]
-donnees_test=DVF_2017[DVF_2017$type_local!='',]
+donnees_test=DVF_2017[DVF_2017$type_local=='',]
+donnees_apprentissage=DVF_2017[DVF_2017$type_local!='',]
 
-model=randomForest(type_local~.,data=donnees_test1, na.action = na.roughfix)
+#Trouver ceux avec le moins d'occurence à virer car trop de factor (88) je dois réduire à moins de 53
+liste_type_culture <- as.data.frame(table(donnees_test_arrangees$nature_culture_speciale))
+liste_nature_a_prendre <- liste_type_culture[liste_type_culture$Freq>5,]$Var1
+
+donnees_test_arrangees <- donnees_test_arrangees[nature_culture_speciale %in% liste_nature_a_prendre,]
+
+#après avoir essayer sans succès d'enlever le trop lein de nombre de nature_culture_special je vais juste enlever cette colonne
+donnees_test_arrangees_1 <- donnees_test_arrangees[,-c("nature_culture_speciale")]
+#ça ne change pas le souci
+#je suprime toutes les lignes qui pèsent lourd pour rien: trop de valeur NA
+#je créer des dummy variable pour ne pas traiter les champs avec des valeurs quasi tout le temps nul différezment
+
+donnees_test_arrangees$surface_5_carrez <- ifelse(!is.na(donnees_test_arrangees$lot5_surface_carrez), 1, 0)
+#en réalité celles qui ont pas de valeur de surface ont plus de 1 lot
+
+donnees_test_arrangees <- donnees_test_arrangees[,-c("lot1_surface_carrez","lot2_surface_carrez","lot3_surface_carrez","lot4_surface_carrez","lot5_surface_carrez")]
+
+data_test_na <- data_test_na[!is.na(surface_reelle_bati),]
 
 
+save(data_test_na,file='table_apprentissage.RData')
+
+data_test_na$type_local <- factor(data_test_na$type_local)
 
 
-class(donnees_test$var) = "Numeric"
+#Je me suis rendu compte que la surface reelle et le nomnbre de pièce n'apparait pas dans la base non étiquetée, je vais donc la supprimer du jeu de test
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[,-c("surface_reelle_bati","nombre_pieces_principales")]
+
+#Je supprime les lignes qui ont des valeurs NA pour les autres champs de test et apprentissage:
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[!is.na(valeur_fonciere),]
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[!is.na(nature_culture),]
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[!is.na(surface_terrain),]
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[!is.na(latitude),]
+
+#Transforme les character en factor
+donnees_apprentissage_arrangees$type_local <- factor(donnees_apprentissage_arrangees$type_local)
+donnees_apprentissage_arrangees$nature_culture <- factor(donnees_apprentissage_arrangees$nature_culture)
+donnees_apprentissage_arrangees$nature_culture_speciale <- factor(donnees_apprentissage_arrangees$nature_culture_speciale)
 
 
-example <- as.data.frame(c("A", "A", "B", "F", "C", "G", "C", "D", "E", "F"))
-names(example) <- "strcol"
+model=randomForest(type_local~.,data=donnees_apprentissage_arrangees_bis,ntree=300)
 
-for(level in unique(example$strcol)){
-  example[paste("dummy", level, sep = "_")] <- ifelse(example$strcol == level,     1, 0)
-}
+
+donnees_test_arrangees$nature_culture_speciale <- as.factor(donnees_test_arrangees$nature_culture_speciale)
+#pour plus de simplicité on enlève le champs nature culture spécial qui a pkus de 53 valeurs
+donnees_apprentissage_arrangees <- donnees_apprentissage_arrangees[,-c("nature_culture_speciale")]
+
+#après test HORRIBLE je vais aussi supprimer les coordonnées, ça sert à rien
+save(model,file="model_NUL.RData")
+
+donnees_apprentissage_arrangees_bis <- donnees_apprentissage_arrangees[,-c("latitude","longitude")]
+
+save(donnees_test_arrangees,file="data_test.RData")
 
 library(caret) 
 library (e1071)
-
-
-
 logit.fit <- train(type_local ~ ., data = donnees_test1,method="glm")
 
 #Tri des données : suppression des doublons (en faisant la somme des surfaces de terrain) et garde que les maisons
@@ -331,3 +358,24 @@ DVF_2022 <- DVF_2022[DVF_2022$type_local=="Maison"]
 DVF_2022 <- DVF_2022 %>% group_by(id_mutation) %>% 
   summarise_all(funs(if(is.numeric(.))sum(.) else str_c(unique(.),collapse="_")))
 
+
+
+nb_surfaces_non_renseignes <- nrow(donnees_apprentissage[surface_terrain==1,])
+#[1] 2431
+nb_surfaces_non_renseignes_vide <- nrow(donnees_apprentissage[is.na(surface_terrain),])
+#[2] 77315
+
+donnees_apprentissage_bien <- donnees_apprentissage[!is.na(surface_terrain) & surface_terrain!=1,]
+
+plot_mosaic <- mosaicplot(table(DVF_2017$type_local,DVF_2017$nature_mutation),xlab="Type du local",ylab="Nature de la mutation",main="Représentation de la table de contingence entre le type de local et la nature de la mutation",color=TRUE)
+
+png("plot_mosaic.png") 
+save(data_test_na,file="apprentissage_best.RData")
+
+
+#Création du champs qui compte le nombre de lignes par mutation
+
+df_decompte <- DVF_2017 %>% count(id_parcelle, date_mutation)
+
+#onmerge ensuite avec la base DVF pour rajouter le champs
+DVF_2017 <- merge(DVF_2017,df_decompte,by.x=c("id_parcelle","date_mutation"),by.y=c("id_parcelle","date_mutation"))
