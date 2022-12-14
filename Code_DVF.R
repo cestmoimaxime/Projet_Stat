@@ -379,3 +379,330 @@ df_decompte <- DVF_2017 %>% count(id_parcelle, date_mutation)
 
 #onmerge ensuite avec la base DVF pour rajouter le champs
 DVF_2017 <- merge(DVF_2017,df_decompte,by.x=c("id_parcelle","date_mutation"),by.y=c("id_parcelle","date_mutation"))
+                     
+#Modif chaimaa _calcul ACP                     
+ 
+library("data.table")
+library("curl")
+library("R.utils")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("arrangements")
+library("gtools")
+library("combinat")
+library("rgdal")
+library("readr")
+library("tidyr")
+
+#departement Landes 
+DVF_Landes_2017 = fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2017/departements/40.csv.gz")
+DVF_Landes_2018= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2018/departements/40.csv.gz")
+DVF_Landes_2019= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2019/departements/40.csv.gz")
+DVF_Landes_2020= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2020/departements/40.csv.gz")
+DVF_Landes_2021= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2021/departements/40.csv.gz")
+DVF_Landes_2022= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2022/departements/40.csv.gz")
+
+
+#departement Meuse
+
+DVF_Meuse_2017 = fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2017/departements/55.csv.gz")
+DVF_Meuse_2018= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2018/departements/55.csv.gz")
+DVF_Meuse_2019= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2019/departements/55.csv.gz")
+DVF_Meuse_2020= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2020/departements/55.csv.gz")
+DVF_Meuse_2021= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2021/departements/55.csv.gz")
+DVF_Meuse_2022= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2022/departements/55.csv.gz")
+
+
+#departement Loire Atlentique
+
+DVF_LoireAtl_2017 = fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2017/departements/44.csv.gz")
+DVF_LoireAtl_2018= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2018/departements/44.csv.gz")
+DVF_LoireAtl_2019= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2019/departements/44.csv.gz")
+DVF_LoireAtl_2020= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2020/departements/44.csv.gz")
+DVF_LoireAtl_2021= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2021/departements/44.csv.gz")
+DVF_LoireAtl_2022= fread("https://files.data.gouv.fr/geo-dvf/latest/csv/2022/departements/44.csv.gz")
+
+
+departements<- st_read("departements-20140306-100m.shp")
+
+
+
+
+Filtre<-function(dvfdate){
+  
+  dvfdate =  dvfdate %>%  filter(type_local=="Maison" & nature_mutation== "Vente" )
+  
+  
+}
+#Filtre sur vente et maison 
+
+DVF_Landes_2017<-Filtre(DVF_Landes_2017)
+DVF_Landes_2018<-Filtre(DVF_Landes_2018)
+DVF_Landes_2019<-Filtre(DVF_Landes_2019)
+DVF_Landes_2020<-Filtre(DVF_Landes_2020)
+DVF_Landes_2021<-Filtre(DVF_Landes_2021)
+DVF_Landes_2022<-Filtre(DVF_Landes_2022)
+
+
+
+#Filtre sur vente et maison 
+
+DVF_Meuse_2017<-Filtre(DVF_Meuse_2017)
+DVF_Meuse_2018<-Filtre(DVF_Meuse_2018)
+DVF_Meuse_2019<-Filtre(DVF_Meuse_2019)
+DVF_Meuse_2020<-Filtre(DVF_Meuse_2020)
+DVF_Meuse_2021<-Filtre(DVF_Meuse_2021)
+DVF_Meuse_2022<-Filtre(DVF_Meuse_2022)
+
+#Filtre sur vente et maison 
+
+DVF_LoireAtl_2017<-Filtre(DVF_LoireAtl_2017)
+DVF_LoireAtl_2018<-Filtre(DVF_LoireAtl_2018)
+DVF_LoireAtl_2019<-Filtre(DVF_LoireAtl_2019)
+DVF_LoireAtl_2020<-Filtre(DVF_LoireAtl_2020)
+DVF_LoireAtl_2021<-Filtre(DVF_LoireAtl_2021)
+DVF_LoireAtl_2022<-Filtre(DVF_LoireAtl_2022)
+
+
+library("factoextra")
+library("ade4")
+
+
+
+
+#visualiser les valeurs foncieres en 2017 pour la vente des maisons 
+
+ValFonciere<-function(dvfdate){
+  ValFonc <-dvfdate[dvfdate$valeur_fonciere<1000000 & dvfdate$valeur_fonciere>0,]
+  
+  HistFonciere <-  hist(ValFonc$valeur_fonciere, xlab="Valeur Fonciere",main="Histogramme de valeurs foncieres")
+  return(HistFonciere)
+}
+
+
+ValFonciere(DVF_Landes_2017)
+ValFonciere(DVF_Landes_2018)
+ValFonciere(DVF_Landes_2019)
+ValFonciere(DVF_Landes_2020)
+ValFonciere(DVF_Landes_2021)
+ValFonciere(DVF_Landes_2022)
+
+
+#ACP 2017 Landes 
+
+var_quantitativeLandes_2017 <-DVF_Landes_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_Landes_2017<-var_quantitativeLandes_2017 %>% drop_na()
+
+
+ACP_Landes_2017 <- prcomp(newData_Landes_2017, scale = TRUE)
+fviz_eig(ACP_Landes_2017,addlabels = TRUE)
+
+
+
+
+#ACP 2017 Meuse
+
+var_quantitative_Meuse_2017 <- DVF_Meuse_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_Meuse_2017 <-var_quantitative_Meuse_2017 %>% drop_na()
+
+
+ACP_Meuse_2017 <- prcomp(newData_Meuse_2017, scale = TRUE)
+fviz_eig(ACP_Meuse_2017,addlabels = TRUE)
+
+#center = True ==> permet de centrer les données (soustraction de la moyenne)
+#scale = True ==> permet de normer les données ==> center et scale = T donnent des données centrées-réduites.
+#ACP 2017 
+
+var_quantitative_LoireAtl_2017 <- DVF_LoireAtl_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_LoireAtl_2017 <-var_quantitative_LoireAtl_2017 %>% drop_na()
+
+
+ACP_LoireAtl_2017 <- prcomp(newData_LoireAtl_2017, scale = TRUE)
+fviz_eig(ACP_LoireAtl_2017,addlabels = TRUE,barfill="gray",barcolor="red")
+
+var <- factoextra::get_pca_var(ACP_LoireAtl_2017)
+
+var$cor #correlation variables/ CP
+
+#autre methode que prcomp 
+
+acp_LoireAtl_2017 <- dudi.pca(newData_LoireAtl_2017, scannf= F,scale=T, center=T)
+
+ 
+fviz_eig(acp_LoireAtl_2017)
+
+#Graphique des individus. Coloration en fonction du cos2 (qualité de représentation). Les individus similaires sont groupés ensemble.
+
+fviz_pca_ind(acp_LoireAtl_2017,
+             col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+#Graphique des variables. 
+#Coloration en fonction de la contribution des variables. 
+#Les variables corrélées positivement sont du même côté du graphique.
+#Les variables corrélées négativement sont sur des côtés opposés du graphique.
+
+fviz_pca_var(acp_LoireAtl_2017,
+             col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+#Biplot des individus et des variables
+
+fviz_pca_biplot(acp_LoireAtl_2017, repel = TRUE,
+                col.var = "#2E9FDF", 
+                col.ind = "#696969"  
+)
+
+
+# Eigenvalues
+eig.val <- get_eigenvalue(acp_LoireAtl_2017)
+eig.val
+
+# Results for Variables
+res.var <- get_pca_var(acp_LoireAtl_2017)
+res.var$coord          # Coordinates
+res.var$contrib        # Contributions to the PCs
+res.var$cos2           # Quality of representation 
+# Results for individuals
+res.ind <- get_pca_ind(acp_LoireAtl_2017)
+res.ind$coord          # Coordinates
+res.ind$contrib        # Contributions to the PCs
+res.ind$cos2  
+
+
+
+
+
+#calculer ACP avec pca pour Landes
+
+
+
+var_quantitativeLandes_2017 <-DVF_Landes_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_Landes_2017<-var_quantitativeLandes_2017 %>% drop_na()
+
+
+
+
+ACP_LANDES_2017 <- dudi.pca(newData_Landes_2017, scannf= F,scale=T, center=T)
+
+
+fviz_eig(ACP_LANDES_2017,addlabels = TRUE)
+
+
+fviz_pca_ind(ACP_LANDES_2017,
+             col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+#Graphique des variables. 
+
+fviz_pca_var(ACP_LANDES_2017,
+             col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+#-------------------------------
+
+
+
+
+#calculer ACP avec pca pour Meuse en 2017
+
+
+
+var_quantitativeMeuse_2017 <-DVF_Meuse_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_Meuse_2017<-var_quantitativeMeuse_2017 %>% drop_na()
+
+
+
+
+ACP_MEUSE_2017 <- dudi.pca(newData_Meuse_2017, scannf= F,scale=T, center=T)
+
+
+fviz_eig(ACP_MEUSE_2017,addlabels = TRUE)
+
+
+fviz_pca_ind(ACP_MEUSE_2017,
+             col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+#Graphique des variables. 
+
+fviz_pca_var(ACP_MEUSE_2017,
+             col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+
+
+
+
+
+
+#calculer ACP avec pca pour Meuse en 2021
+
+
+
+var_quantitativeMeuse_2021 <-DVF_Meuse_2021[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
+
+newData_Meuse_2021<-var_quantitativeMeuse_2021 %>% drop_na()
+
+
+
+
+ACP_MEUSE_2021 <- dudi.pca(newData_Meuse_2021, scannf= F,scale=T, center=T)
+
+
+fviz_eig(ACP_MEUSE_2021,addlabels = TRUE)
+
+
+fviz_pca_ind(ACP_MEUSE_2021,
+             col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+#Graphique des variables. 
+
+fviz_pca_var(ACP_MEUSE_2021,
+             col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     
+)
+
+
+
+
+
+
+
+
+
+                    
