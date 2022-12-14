@@ -380,8 +380,8 @@ df_decompte <- DVF_2017 %>% count(id_parcelle, date_mutation)
 #onmerge ensuite avec la base DVF pour rajouter le champs
 DVF_2017 <- merge(DVF_2017,df_decompte,by.x=c("id_parcelle","date_mutation"),by.y=c("id_parcelle","date_mutation"))
                      
-#Modif chaimaa _calcul ACP                     
- 
+#Modif chaimaa _calcul ACP et boxplots 
+                     
 library("data.table")
 library("curl")
 library("R.utils")
@@ -528,6 +528,8 @@ var <- factoextra::get_pca_var(ACP_LoireAtl_2017)
 
 var$cor #correlation variables/ CP
 
+
+
 #autre methode que prcomp 
 
 acp_LoireAtl_2017 <- dudi.pca(newData_LoireAtl_2017, scannf= F,scale=T, center=T)
@@ -537,7 +539,7 @@ fviz_eig(acp_LoireAtl_2017)
 
 #Graphique des individus. Coloration en fonction du cos2 (qualité de représentation). Les individus similaires sont groupés ensemble.
 
-fviz_pca_ind(acp_LoireAtl_2017,
+fviz_pca_ind(ACP_LoireAtl_2017,
              col.ind = "cos2", 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = TRUE     
@@ -550,7 +552,7 @@ fviz_pca_ind(acp_LoireAtl_2017,
 #Les variables corrélées positivement sont du même côté du graphique.
 #Les variables corrélées négativement sont sur des côtés opposés du graphique.
 
-fviz_pca_var(acp_LoireAtl_2017,
+fviz_pca_var(ACP_LoireAtl_2017,
              col.var = "contrib", 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = TRUE     
@@ -558,7 +560,7 @@ fviz_pca_var(acp_LoireAtl_2017,
 
 
 
-#Biplot des individus et des variables
+  #Biplot des individus et des variables
 
 fviz_pca_biplot(acp_LoireAtl_2017, repel = TRUE,
                 col.var = "#2E9FDF", 
@@ -600,13 +602,20 @@ ACP_LANDES_2017 <- dudi.pca(newData_Landes_2017, scannf= F,scale=T, center=T)
 
 
 fviz_eig(ACP_LANDES_2017,addlabels = TRUE)
-
+#representation des individus dans les LANDES 
 
 fviz_pca_ind(ACP_LANDES_2017,
              col.ind = "cos2", 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE     
+             repel = TRUE,
+            
 )
+
+
+
+#ploter
+plot(newData_Landes_2017$valeur_fonciere,newData_Landes_2017$surface_reelle_bati)
+
 
 
 
@@ -620,32 +629,22 @@ fviz_pca_var(ACP_LANDES_2017,
 
 #-------------------------------
 
-
-
-
 #calculer ACP avec pca pour Meuse en 2017
-
-
 
 var_quantitativeMeuse_2017 <-DVF_Meuse_2017[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
 
 newData_Meuse_2017<-var_quantitativeMeuse_2017 %>% drop_na()
 
 
-
-
 ACP_MEUSE_2017 <- dudi.pca(newData_Meuse_2017, scannf= F,scale=T, center=T)
 
-
 fviz_eig(ACP_MEUSE_2017,addlabels = TRUE)
-
 
 fviz_pca_ind(ACP_MEUSE_2017,
              col.ind = "cos2", 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = TRUE     
 )
-
 
 
 #Graphique des variables. 
@@ -657,29 +656,14 @@ fviz_pca_var(ACP_MEUSE_2017,
 )
 
 
-
-
-
-
-
-
-
 #calculer ACP avec pca pour Meuse en 2021
 
-
-
 var_quantitativeMeuse_2021 <-DVF_Meuse_2021[,c("valeur_fonciere","surface_reelle_bati","nombre_pieces_principales","longitude","latitude")]
-
 newData_Meuse_2021<-var_quantitativeMeuse_2021 %>% drop_na()
-
-
-
 
 ACP_MEUSE_2021 <- dudi.pca(newData_Meuse_2021, scannf= F,scale=T, center=T)
 
-
 fviz_eig(ACP_MEUSE_2021,addlabels = TRUE)
-
 
 fviz_pca_ind(ACP_MEUSE_2021,
              col.ind = "cos2", 
@@ -698,8 +682,49 @@ fviz_pca_var(ACP_MEUSE_2021,
 )
 
 
+#Afficher la valeur fonciere en fct de la surface reelle 
+#affichage des observations sur les boxplots 
+
+#trouver les valeurs des outliers 
+
+outlier_val <- boxplot.stats(newData_Landes_2017$valeur_fonciere)$out
+outlier_val
+
+#filtrer les données sur le min des outliers  /garder que les valeurs au dessous de l'outlier 
+
+newData_Landes_2017=newData_Landes_2017[newData_Landes_2017$valeur_fonciere<min(outlier_val),]
+#on decoupe la surface en 5 classes 
+newData_Landes_2017$surface_classe<-cut(x=newData_Landes_2017$surface_reelle_bati,5)
 
 
+library(ggplot2)
+ggplot(newData_Landes_2017, aes( x=newData_Landes_2017$surface_classe,y=newData_Landes_2017$valeur_fonciere,fill = "wheat",coulour=newData_Landes_2017$surface_reelle_bati)) +
+  geom_boxplot()+ 
+ # geom_jitter(width=0.25) +
+  geom_boxplot(alpha=0.5)+ 
+  xlab(label = "surface relle bati") +
+  ylab(label = "valeur fonciere ") +
+  theme(axis.text.x = element_text(angle=30, hjust=1, vjust=1))+
+  theme(legend.position="none")+
+  ggtitle("Exemple de boxplots sur les données Landes") 
+
+ 
+#on etudie la répartition de y en fonction de x (x c'est la variable qualitative contenant les classes qu'on souhaite comparer )
+#Dans notre cas, y est une variable quantitative 
+
+ggplot(newData_Landes_2017) + geom_boxplot(aes(x = newData_Landes_2017$surface_reelle_bati, y = newData_Landes_2017$valeur_fonciere))
+
+
+
+outlier_idx <-which(newData_Landes_2017$valeur_fonciere %in% c(outlier_val))
+outlier_idx
+
+newData_Landes_2017[outlier_idx,]
+
+
+
+
+ 
 
 
 
